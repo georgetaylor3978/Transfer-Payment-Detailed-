@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Payments — Detail Dashboard</title>
+    <meta name="description" content="Canada Federal Government Transfer Payments — Detailed recipient-level spending data from 2012 to 2026.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header" id="banner">
+    <div class="header-content">
+        <div class="logo-area">
+            <a href="https://www.youtube.com/watch?v=xtuLxojQr6Y" target="_blank" rel="noopener noreferrer" class="hobo-link" title="The Littlest Hobo">
+                <img src="hobo.jpg" alt="The Littlest Hobo" class="hobo-img">
+            </a>
+            <div>
+                <h1>TRANSFER PAYMENTS &mdash; DETAIL</h1>
+                <div class="subtitle">Public Accounts of Canada &mdash; Recipient-Level Spending &middot; 2012&ndash;2026</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button id="themeToggle" class="theme-toggle-btn" title="Toggle Light/Dark"><span class="theme-icon">&#127769;</span></button>
+            <a href="https://github.com/georgetaylor3978/Transfer-Payment-Detailed-" target="_blank" rel="noopener noreferrer" class="source-link" title="GitHub Source">&#128202; Source</a>
+            <div class="data-status loading" id="dataStatus">&#9201; Loading&hellip;</div>
+        </div>
+    </div>
+</header>
+
+<!-- CONTROLS -->
+<section class="controls-bar">
+    <div class="controls-content">
+        <div class="controls-row">
+
+            <div class="control-group">
+                <label>Department</label>
+                <div class="custom-dropdown" id="deptDropdown">
+                    <div class="dropdown-trigger" id="deptTrigger">
+                        <span class="dropdown-label">&lt;ALL&gt;</span>
+                        <span class="dropdown-arrow"></span>
+                    </div>
+                    <div class="dropdown-menu" id="deptMenu">
+                        <div class="dropdown-search"><input type="text" placeholder="Search departments&#8230;" id="deptSearch"></div>
+                        <div class="dropdown-list" id="deptList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Agency</label>
+                <div class="custom-dropdown" id="agencyDropdown">
+                    <div class="dropdown-trigger" id="agencyTrigger">
+                        <span class="dropdown-label">&lt;ALL&gt;</span>
+                        <span class="dropdown-arrow"></span>
+                    </div>
+                    <div class="dropdown-menu" id="agencyMenu">
+                        <div class="dropdown-search"><input type="text" placeholder="Search agencies&#8230;" id="agencySearch"></div>
+                        <div class="dropdown-list" id="agencyList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Province / Location</label>
+                <div class="custom-dropdown" id="locDropdown">
+                    <div class="dropdown-trigger" id="locTrigger">
+                        <span class="dropdown-label">&lt;ALL&gt;</span>
+                        <span class="dropdown-arrow"></span>
+                    </div>
+                    <div class="dropdown-menu" id="locMenu">
+                        <div class="dropdown-search"><input type="text" placeholder="Search locations&#8230;" id="locSearch"></div>
+                        <div class="dropdown-list" id="locList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group toggle-group" id="combineToggleGroup">
+                <label>Combine Agencies</label>
+                <label class="switch">
+                    <input type="checkbox" id="combineToggle" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="definition-box">
+                <strong>What is a Transfer Payment?</strong>
+                <p>&ldquo;A monetary payment, or a transfer of goods, services or assets made, on the basis of an appropriation, to a third party&hellip; that does not result in the acquisition by the Government of Canada of any goods, services or assets.&rdquo;</p>
+            </div>
+
+        </div>
+
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Annual Spend</div>
+                <div class="kpi-sublabel" id="kpiYearLabel">Selected Year</div>
+                <div class="kpi-value" id="kpiAnnual">&mdash;</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Cumulative Spend</div>
+                <div class="kpi-sublabel">All Years</div>
+                <div class="kpi-value" id="kpiCumulative">&mdash;</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Active Programs</div>
+                <div class="kpi-sublabel">Selected Year</div>
+                <div class="kpi-value" id="kpiPrograms">&mdash;</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Active Recipients</div>
+                <div class="kpi-sublabel">Selected Year</div>
+                <div class="kpi-value" id="kpiRecipients">&mdash;</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MAIN -->
+<main class="main-content">
+
+    <section class="chart-section">
+        <div class="chart-header">
+            <h2 id="chart1Title">Total Transfer Payments Over Time</h2>
+        </div>
+        <div class="chart-wrapper"><canvas id="chart1"></canvas></div>
+    </section>
+
+    <section class="chart-section">
+        <div class="chart-header">
+            <h2 id="chart2Title">Breakdown by Agency</h2>
+            <div class="chart-control">
+                <label>Year</label>
+                <select id="yearSelect"></select>
+            </div>
+        </div>
+        <div class="chart-wrapper chart-wrapper-tall" id="chart2Wrapper">
+            <canvas id="chart2"></canvas>
+        </div>
+    </section>
+
+    <section class="chart-section table-section">
+        <div class="chart-header">
+            <div>
+                <h2 id="tableTitle">Recipients Breakdown</h2>
+                <p class="section-desc" id="tableSubtitle">Top 100 recipients for selected filters and year</p>
+            </div>
+            <div class="table-search-wrap">
+                <input type="text" id="tableSearch" placeholder="Search recipient, program, agency&#8230;">
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="recipient">Recipient <span class="sort-icon"></span></th>
+                        <th class="sortable" data-sort="program">Program <span class="sort-icon"></span></th>
+                        <th class="sortable" data-sort="agency">Agency <span class="sort-icon"></span></th>
+                        <th class="sortable" data-sort="location">Location <span class="sort-icon"></span></th>
+                        <th class="sortable numeric" data-sort="amount">Amount <span class="sort-icon"></span></th>
+                        <th class="numeric">% of Total</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>Data: Public Accounts of Canada &mdash; Transfer Payments Detail &nbsp;|&nbsp;
+       <a href="https://github.com/georgetaylor3978/Transfer-Payment-Detailed-" target="_blank" rel="noopener">GitHub</a>
+    </p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

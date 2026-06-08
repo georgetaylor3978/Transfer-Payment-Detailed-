@@ -1,237 +1,242 @@
-/* ═══════════════════════════════════════════════════════════════
+/* ================================================================
    Transfer Detail Dashboard — app.js
    Records: [year, agencyIdx, programIdx, shortNameIdx, locationIdx, cityIdx, groupIdx, recipientIdx, amount]
-   ═══════════════════════════════════════════════════════════════ */
+   ================================================================ */
 
 'use strict';
 
 // ── State ──────────────────────────────────────────────────────
 let db = null;
 
-// Selections: -1 = <ALL>
-let selDeptIdx     = -1;
-let selAgencyIdx   = -1;
-let selLocIdx      = -1;
-let selectedYear   = null;
+let selDeptIdx    = -1;   // -1 = <ALL>
+let selAgencyIdx  = -1;
+let selLocIdx     = -1;
+let selectedYear  = null;
 let combineAgencies = true;
-let themeMode      = 'dark';
+let themeMode     = 'dark';
 
-// Table
 let sortCol = 'amount';
 let sortDir = 'desc';
 let searchQ = '';
 
-// Charts
 let c1 = null;
 let c2 = null;
 
-// Color palette
 const PALETTE = [
     '#3b82f6','#10b981','#06b6d4','#f59e0b',
     '#ec4899','#8b5cf6','#f97316','#14b8a6',
     '#6366f1','#84cc16','#e11d48','#0ea5e9'
 ];
 
-// ── 1. BOOTSTRAP ───────────────────────────────────────────────
+// ── 1. INIT ────────────────────────────────────────────────────
 async function init() {
     const status = document.getElementById('dataStatus');
     try {
         const res = await fetch('data.json');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         db = await res.json();
     } catch (e) {
-        status.textContent = '❌ Load failed';
+        status.textContent = 'Load failed';
         status.className = 'data-status error';
         console.error(e);
         return;
     }
 
-    const allYears = getUniqueYears();
-    selectedYear = allYears[allYears.length - 1];
+    selectedYear = getYears().slice(-1)[0];
 
-    status.textContent = `✓ ${db.records.length.toLocaleString()} records`;
+    status.textContent = db.records.length.toLocaleString() + ' records';
     status.className = 'data-status loaded';
 
     initTheme();
-    buildDeptDropdown();
-    buildAgencyDropdown();
-    buildLocDropdown();
+    wireDropdowns();       // set up triggers ONCE
+    fillDeptList();
+    fillAgencyList();
+    fillLocList();
     buildYearSelect();
     initCombineToggle();
     initTableControls();
-    initDropdownDismiss();
     renderAll();
 }
 
 // ── 2. HELPERS ─────────────────────────────────────────────────
-function getUniqueYears() {
+function getYears() {
     return [...new Set(db.records.map(r => r[0]))].sort((a, b) => a - b);
 }
 
 function getFiltered() {
     let rows = db.records;
-    if (selDeptIdx !== -1)   rows = rows.filter(r => db.agencyToDeptIndex[r[1]] === selDeptIdx);
+    if (selDeptIdx   !== -1) rows = rows.filter(r => db.agencyToDeptIndex[r[1]] === selDeptIdx);
     if (selAgencyIdx !== -1) rows = rows.filter(r => r[1] === selAgencyIdx);
-    if (selLocIdx !== -1)    rows = rows.filter(r => r[4] === selLocIdx);
+    if (selLocIdx    !== -1) rows = rows.filter(r => r[4] === selLocIdx);
     return rows;
 }
 
-function fmtDollar(v) {
+function fmt(v) {
     if (!v) return '$0';
-    const neg = v < 0;
-    const a = Math.abs(v);
-    let s = a >= 1e9 ? `$${(a/1e9).toFixed(2)}B`
-          : a >= 1e6 ? `$${(a/1e6).toFixed(2)}M`
-          : `$${a.toLocaleString('en-CA', {maximumFractionDigits:0})}`;
-    return neg ? '-' + s : s;
+    const neg = v < 0, a = Math.abs(v);
+    const s = a >= 1e9 ? '$' + (a/1e9).toFixed(2) + 'B'
+            : a >= 1e6 ? '$' + (a/1e6).toFixed(2) + 'M'
+            : '$' + a.toLocaleString('en-CA', {maximumFractionDigits:0});
+    return neg ? '-'+s : s;
 }
 
-function getThemeVar(v) {
+function cssVar(v) {
     return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 }
 
-// ── 3. DROPDOWNS ───────────────────────────────────────────────
-function makeDropdown(triggerId, menuId, searchId, listId, onSelect) {
-    const trigger = document.getElementById(triggerId);
-    const menu    = document.getElementById(menuId);
-    const search  = document.getElementById(searchId);
-    const list    = document.getElementById(listId);
+// ── 3. DROPDOWN WIRING (called once) ──────────────────────────
+// Each dropdown: trigger opens/closes menu; click outside closes all.
+function wireDropdowns() {
+    const dds = [
+        { trigger: 'deptTrigger',   menu: 'deptMenu'   },
+        { trigger: 'agencyTrigger', menu: 'agencyMenu' },
+        { trigger: 'locTrigger',    menu: 'locMenu'    }
+    ];
 
-    trigger.addEventListener('click', e => {
-        e.stopPropagation();
-        const wasOpen = menu.classList.contains('open');
-        closeAllDropdowns();
-        if (!wasOpen) menu.classList.add('open');
-    });
+    dds.forEach(dd => {
+        const trigger = document.getElementById(dd.trigger);
+        const menu    = document.getElementById(dd.menu);
 
-    search.addEventListener('input', () => {
-        const q = search.value.toLowerCase();
-        list.querySelectorAll('.dd-item').forEach(el => {
-            el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isOpen = menu.classList.contains('open');
+            closeAll();
+            if (!isOpen) menu.classList.add('open');
         });
     });
 
-    list._onSelect = onSelect;
+    // Search boxes – one-time wire (lists are repopulated but search still works)
+    wireSearch('deptSearch',   'deptList');
+    wireSearch('agencySearch', 'agencyList');
+    wireSearch('locSearch',    'locList');
+
+    document.addEventListener('click', closeAll);
 }
 
-function populateList(listId, items, currentIdx, labelFn) {
-    // items: [{idx, name}], currentIdx is selected index (-1 = ALL)
-    const list = document.getElementById(listId);
-    list.innerHTML = '';
-
-    const all = document.createElement('div');
-    all.className = 'dd-item' + (currentIdx === -1 ? ' selected' : '');
-    all.textContent = '<ALL>';
-    all.addEventListener('click', () => list._onSelect(-1, '<ALL>'));
-    list.appendChild(all);
-
-    items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dd-item' + (item.idx === currentIdx ? ' selected' : '');
-        div.textContent = labelFn ? labelFn(item) : item.name;
-        div.addEventListener('click', () => list._onSelect(item.idx, item.name));
-        list.appendChild(div);
-    });
-}
-
-function setDropdownLabel(triggerId, text) {
-    document.querySelector(`#${triggerId} .dropdown-label`).textContent = text;
-}
-
-function closeAllDropdowns() {
+function closeAll() {
     ['deptMenu','agencyMenu','locMenu'].forEach(id =>
         document.getElementById(id).classList.remove('open')
     );
 }
 
-function initDropdownDismiss() {
-    document.addEventListener('click', closeAllDropdowns);
+function wireSearch(searchId, listId) {
+    document.getElementById(searchId).addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        document.getElementById(listId).querySelectorAll('.dd-item').forEach(el => {
+            el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
 }
 
-// ── Department dropdown ──
-function buildDeptDropdown() {
-    const items = db.departments.map((name, idx) => ({idx, name}))
+// ── 4. FILL DROPDOWN LISTS (called on each state change) ───────
+function setLabel(triggerId, text) {
+    document.querySelector('#' + triggerId + ' .dropdown-label').textContent = text;
+}
+
+function fillList(listId, items, selectedIdx, onSelect) {
+    // items: [{idx, name}]
+    const list = document.getElementById(listId);
+    list.innerHTML = '';
+
+    const allRow = makeItem('<ALL>', selectedIdx === -1, () => {
+        onSelect(-1, '<ALL>');
+        closeAll();
+    });
+    list.appendChild(allRow);
+
+    items.forEach(item => {
+        const el = makeItem(item.name, item.idx === selectedIdx, () => {
+            onSelect(item.idx, item.name);
+            closeAll();
+        });
+        list.appendChild(el);
+    });
+}
+
+function makeItem(text, selected, onClick) {
+    const div = document.createElement('div');
+    div.className = 'dd-item' + (selected ? ' selected' : '');
+    div.textContent = text;
+    div.addEventListener('click', function(e) {
+        e.stopPropagation();
+        onClick();
+    });
+    return div;
+}
+
+function fillDeptList() {
+    const items = db.departments
+        .map((name, idx) => ({idx, name}))
         .sort((a, b) => a.name.localeCompare(b.name));
 
-    makeDropdown('deptTrigger','deptMenu','deptSearch','deptList', (idx, name) => {
-        selDeptIdx = idx;
+    fillList('deptList', items, selDeptIdx, (idx, name) => {
+        selDeptIdx   = idx;
         selAgencyIdx = -1;
-        setDropdownLabel('deptTrigger', name);
-        setDropdownLabel('agencyTrigger', '<ALL>');
-        buildAgencyDropdown();
-        closeAllDropdowns();
+        setLabel('deptTrigger',   name);
+        setLabel('agencyTrigger', '<ALL>');
+        fillAgencyList();
         renderAll();
     });
-
-    populateList('deptList', items, selDeptIdx);
 }
 
-// ── Agency dropdown (filtered by dept) ──
-function buildAgencyDropdown() {
+function fillAgencyList() {
     let items = db.agencies.map((name, idx) => ({idx, name}));
     if (selDeptIdx !== -1) {
         items = items.filter(item => db.agencyToDeptIndex[item.idx] === selDeptIdx);
     }
     items.sort((a, b) => a.name.localeCompare(b.name));
 
-    makeDropdown('agencyTrigger','agencyMenu','agencySearch','agencyList', (idx, name) => {
+    fillList('agencyList', items, selAgencyIdx, (idx, name) => {
         selAgencyIdx = idx;
-        setDropdownLabel('agencyTrigger', name);
-        closeAllDropdowns();
+        setLabel('agencyTrigger', name);
         renderAll();
     });
-
-    populateList('agencyList', items, selAgencyIdx);
 }
 
-// ── Location dropdown ──
-function buildLocDropdown() {
-    const items = db.locations.map((name, idx) => ({idx, name}))
+function fillLocList() {
+    const items = db.locations
+        .map((name, idx) => ({idx, name}))
         .sort((a, b) => a.name.localeCompare(b.name));
 
-    makeDropdown('locTrigger','locMenu','locSearch','locList', (idx, name) => {
+    fillList('locList', items, selLocIdx, (idx, name) => {
         selLocIdx = idx;
-        setDropdownLabel('locTrigger', name);
-        closeAllDropdowns();
+        setLabel('locTrigger', name);
         renderAll();
     });
-
-    populateList('locList', items, selLocIdx);
 }
 
-// ── Year select ──
+// ── 5. YEAR SELECT ─────────────────────────────────────────────
 function buildYearSelect() {
     const sel = document.getElementById('yearSelect');
     sel.innerHTML = '';
-    const years = getUniqueYears().reverse();
-    years.forEach(y => {
+    getYears().slice().reverse().forEach(y => {
         const opt = document.createElement('option');
         opt.value = y;
         opt.textContent = y;
         if (y === selectedYear) opt.selected = true;
         sel.appendChild(opt);
     });
-    sel.addEventListener('change', () => {
-        selectedYear = parseInt(sel.value, 10);
+    sel.addEventListener('change', function() {
+        selectedYear = parseInt(this.value, 10);
+        renderKPIs();
         renderGraph2();
         renderTable();
-        renderKPIs();
     });
 }
 
-// ── Combine toggle ──
+// ── 6. COMBINE TOGGLE ──────────────────────────────────────────
 function initCombineToggle() {
     const toggle = document.getElementById('combineToggle');
     toggle.checked = combineAgencies;
-    toggle.addEventListener('change', () => {
-        combineAgencies = toggle.checked;
+    toggle.addEventListener('change', function() {
+        combineAgencies = this.checked;
         renderGraph1();
     });
 }
 
-// ── 4. KPIs ────────────────────────────────────────────────────
+// ── 7. KPIs ────────────────────────────────────────────────────
 function renderKPIs() {
-    const rows = getFiltered();
+    const rows     = getFiltered();
     const yearRows = rows.filter(r => r[0] === selectedYear);
 
     let annual = 0, cumulative = 0;
@@ -239,32 +244,29 @@ function renderKPIs() {
     const recipients = new Set();
 
     rows.forEach(r => { cumulative += r[8]; });
-
     yearRows.forEach(r => {
         annual += r[8];
-        programs.add(r[3]);   // shortNameIdx
-        recipients.add(r[7]); // recipientIdx
+        programs.add(r[3]);
+        recipients.add(r[7]);
     });
 
-    document.getElementById('kpiAnnual').textContent     = fmtDollar(annual);
-    document.getElementById('kpiCumulative').textContent = fmtDollar(cumulative);
+    document.getElementById('kpiAnnual').textContent     = fmt(annual);
+    document.getElementById('kpiCumulative').textContent = fmt(cumulative);
     document.getElementById('kpiPrograms').textContent   = programs.size.toLocaleString();
     document.getElementById('kpiRecipients').textContent = recipients.size.toLocaleString();
     document.getElementById('kpiYearLabel').textContent  = String(selectedYear);
 }
 
-// ── 5. GRAPH 1: Time series ────────────────────────────────────
+// ── 8. CHART 1: Time series ────────────────────────────────────
 function renderGraph1() {
     if (c1) c1.destroy();
 
-    const rows   = getFiltered();
-    const years  = getUniqueYears();
-    let datasets = [];
-    let stacked  = false;
-    let title    = 'Total Transfer Payments Over Time';
+    const rows  = getFiltered();
+    const years = getYears();
+    let datasets = [], stacked = false;
+    let title = 'Total Transfer Payments Over Time';
 
     if (combineAgencies) {
-        // Single line / bars: total per year
         const byYear = {};
         years.forEach(y => { byYear[y] = 0; });
         rows.forEach(r => { byYear[r[0]] = (byYear[r[0]] || 0) + r[8]; });
@@ -284,7 +286,6 @@ function renderGraph1() {
         stacked = true;
 
         if (selDeptIdx === -1) {
-            // Stack by Department
             title = 'Transfer Payments Over Time by Department';
             const byDept = {};
             rows.forEach(r => {
@@ -293,98 +294,90 @@ function renderGraph1() {
                 byDept[d][r[0]] = (byDept[d][r[0]] || 0) + r[8];
             });
 
-            const sorted = Object.keys(byDept)
-                .map(d => parseInt(d))
+            Object.keys(byDept)
+                .map(Number)
                 .sort((a, b) => {
                     const sa = Object.values(byDept[a]).reduce((s,v)=>s+v,0);
                     const sb = Object.values(byDept[b]).reduce((s,v)=>s+v,0);
                     return sb - sa;
+                })
+                .forEach((dIdx, ci) => {
+                    const total = Object.values(byDept[dIdx]).reduce((s,v)=>s+v,0);
+                    if (!total) return;
+                    datasets.push({
+                        label: db.departments[dIdx],
+                        data: years.map(y => byDept[dIdx][y] || 0),
+                        backgroundColor: PALETTE[ci % PALETTE.length],
+                        borderRadius: 3
+                    });
                 });
-
-            sorted.forEach((dIdx, ci) => {
-                const total = Object.values(byDept[dIdx]).reduce((s,v)=>s+v,0);
-                if (!total) return;
-                datasets.push({
-                    label: db.departments[dIdx],
-                    data: years.map(y => byDept[dIdx][y] || 0),
-                    backgroundColor: PALETTE[ci % PALETTE.length],
-                    borderRadius: 3
-                });
-            });
         } else {
-            // Stack by Agency within selected dept
-            title = `Spend Over Time by Agency — ${db.departments[selDeptIdx]}`;
-            const byAgency = {};
+            title = 'Spend Over Time by Agency — ' + db.departments[selDeptIdx];
+            const byAg = {};
             rows.forEach(r => {
-                if (!byAgency[r[1]]) byAgency[r[1]] = {};
-                byAgency[r[1]][r[0]] = (byAgency[r[1]][r[0]] || 0) + r[8];
+                if (!byAg[r[1]]) byAg[r[1]] = {};
+                byAg[r[1]][r[0]] = (byAg[r[1]][r[0]] || 0) + r[8];
             });
 
-            const sorted = Object.keys(byAgency)
-                .map(a => parseInt(a))
+            Object.keys(byAg)
+                .map(Number)
                 .sort((a, b) => {
-                    const sa = Object.values(byAgency[a]).reduce((s,v)=>s+v,0);
-                    const sb = Object.values(byAgency[b]).reduce((s,v)=>s+v,0);
+                    const sa = Object.values(byAg[a]).reduce((s,v)=>s+v,0);
+                    const sb = Object.values(byAg[b]).reduce((s,v)=>s+v,0);
                     return sb - sa;
+                })
+                .forEach((aIdx, ci) => {
+                    const total = Object.values(byAg[aIdx]).reduce((s,v)=>s+v,0);
+                    if (!total) return;
+                    datasets.push({
+                        label: db.agencies[aIdx],
+                        data: years.map(y => byAg[aIdx][y] || 0),
+                        backgroundColor: PALETTE[ci % PALETTE.length],
+                        borderRadius: 3
+                    });
                 });
-
-            sorted.forEach((aIdx, ci) => {
-                const total = Object.values(byAgency[aIdx]).reduce((s,v)=>s+v,0);
-                if (!total) return;
-                datasets.push({
-                    label: db.agencies[aIdx],
-                    data: years.map(y => byAgency[aIdx][y] || 0),
-                    backgroundColor: PALETTE[ci % PALETTE.length],
-                    borderRadius: 3
-                });
-            });
         }
     }
 
     document.getElementById('chart1Title').textContent = title;
-
     c1 = new Chart(document.getElementById('chart1'), {
         type: 'bar',
         data: { labels: years, datasets },
-        options: verticalBarOpts(stacked)
+        options: vBarOpts(stacked)
     });
 }
 
-// ── 6. GRAPH 2: Breakdown for selected year ────────────────────
+// ── 9. CHART 2: Year breakdown ─────────────────────────────────
 function renderGraph2() {
     if (c2) c2.destroy();
 
-    const rows     = getFiltered();
-    const yearRows = rows.filter(r => r[0] === selectedYear);
+    const yearRows = getFiltered().filter(r => r[0] === selectedYear);
     const byGroup  = {};
     let total = 0;
 
     if (selDeptIdx === -1) {
-        // Group by Department
         yearRows.forEach(r => {
             const d = db.agencyToDeptIndex[r[1]];
             byGroup[d] = (byGroup[d] || 0) + r[8];
             total += r[8];
         });
     } else {
-        // Group by Agency
         yearRows.forEach(r => {
             byGroup[r[1]] = (byGroup[r[1]] || 0) + r[8];
             total += r[8];
         });
     }
 
-    let sorted = Object.entries(byGroup)
-        .map(([k, v]) => ({ idx: parseInt(k), amt: v }))
+    const sorted = Object.entries(byGroup)
+        .map(([k, v]) => ({ idx: +k, amt: v }))
         .filter(x => x.amt > 0)
         .sort((a, b) => b.amt - a.amt);
 
-    const top = sorted.slice(0, 15);
+    const top    = sorted.slice(0, 15);
     const labels = top.map(x => selDeptIdx === -1 ? db.departments[x.idx] : db.agencies[x.idx]);
     const values = top.map(x => x.amt);
 
-    // Other bucket
-    const topSum = values.reduce((s, v) => s + v, 0);
+    const topSum = values.reduce((s,v) => s+v, 0);
     if (sorted.length > 15 && total - topSum > 0) {
         labels.push(selDeptIdx === -1 ? 'Other Departments' : 'Other Agencies');
         values.push(total - topSum);
@@ -394,12 +387,11 @@ function renderGraph2() {
     wrapper.style.height = Math.max(400, labels.length * 30) + 'px';
 
     const title = selDeptIdx === -1
-        ? `Transfer Payments by Department — ${selectedYear}`
-        : `Agency Spending: ${db.departments[selDeptIdx]} — ${selectedYear}`;
+        ? 'Transfer Payments by Department — ' + selectedYear
+        : 'Agency Spending: ' + db.departments[selDeptIdx] + ' — ' + selectedYear;
     document.getElementById('chart2Title').textContent = title;
 
-    // Gradient colours
-    const colors = gradientColors(top.length, '#3b82f6', '#06b6d4');
+    const colors = gradColors(top.length, '#3b82f6', '#06b6d4');
     if (labels.length > top.length) colors.push('#6b7089');
 
     c2 = new Chart(document.getElementById('chart2'), {
@@ -407,32 +399,32 @@ function renderGraph2() {
         data: {
             labels,
             datasets: [{
-                label: 'Amount ($)',
+                label: 'Amount',
                 data: values,
                 backgroundColor: colors,
                 borderRadius: 4,
                 barThickness: 18
             }]
         },
-        options: horizontalBarOpts()
+        options: hBarOpts()
     });
 }
 
-// ── 7. TABLE ────────────────────────────────────────────────────
+// ── 10. TABLE ──────────────────────────────────────────────────
 function initTableControls() {
-    document.getElementById('tableSearch').addEventListener('input', e => {
-        searchQ = e.target.value;
+    document.getElementById('tableSearch').addEventListener('input', function() {
+        searchQ = this.value;
         renderTable();
     });
 
     document.querySelectorAll('.premium-table th.sortable').forEach(th => {
-        th.addEventListener('click', () => {
-            const col = th.dataset.sort;
+        th.addEventListener('click', function() {
+            const col = this.dataset.sort;
             if (sortCol === col) {
                 sortDir = sortDir === 'asc' ? 'desc' : 'asc';
             } else {
                 sortCol = col;
-                sortDir = (col === 'amount') ? 'desc' : 'asc';
+                sortDir = col === 'amount' ? 'desc' : 'asc';
             }
             updateSortIcons();
             renderTable();
@@ -442,24 +434,22 @@ function initTableControls() {
 
 function updateSortIcons() {
     document.querySelectorAll('.premium-table th.sortable').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
+        th.classList.remove('sort-asc','sort-desc');
         if (th.dataset.sort === sortCol) th.classList.add('sort-' + sortDir);
     });
 }
 
 function renderTable() {
-    const tbody = document.getElementById('tableBody');
+    const tbody    = document.getElementById('tableBody');
     if (!tbody) return;
-
     updateSortIcons();
 
-    const filtered  = getFiltered();
-    const yearRows  = filtered.filter(r => r[0] === selectedYear);
-    const agg       = {};
-    let totalSum    = 0;
+    const yearRows = getFiltered().filter(r => r[0] === selectedYear);
+    const agg      = {};
+    let totalSum   = 0;
 
     yearRows.forEach(r => {
-        const key = `${r[7]}|${r[3]}|${r[1]}|${r[4]}`;
+        const key = r[7] + '|' + r[3] + '|' + r[1] + '|' + r[4];
         if (!agg[key]) {
             agg[key] = { recipIdx: r[7], shortIdx: r[3], progIdx: r[2], agIdx: r[1], locIdx: r[4], amount: 0 };
         }
@@ -470,7 +460,6 @@ function renderTable() {
     let list = Object.values(agg);
     list.forEach(x => { x.percent = totalSum > 0 ? (x.amount / totalSum) * 100 : 0; });
 
-    // Search
     if (searchQ.trim()) {
         const q = searchQ.toLowerCase();
         list = list.filter(x =>
@@ -481,7 +470,6 @@ function renderTable() {
         );
     }
 
-    // Sort
     list.sort((a, b) => {
         let va, vb;
         switch (sortCol) {
@@ -499,38 +487,38 @@ function renderTable() {
     tbody.innerHTML = '';
 
     if (!display.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">No matching records found.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">No matching records found.</td></tr>';
         return;
     }
 
     display.forEach(x => {
-        const tr  = document.createElement('tr');
+        const tr   = document.createElement('tr');
         const prog = db.programShortNames[x.shortIdx];
         const full = db.programs[x.progIdx];
-        tr.innerHTML = `
-            <td><strong>${db.recipients[x.recipIdx]}</strong></td>
-            <td><span class="program-badge" title="${full.replace(/"/g,"&quot;")}">${prog !== 'Unknown' ? prog : full.substring(0,60) + '…'}</span></td>
-            <td>${db.agencies[x.agIdx]}</td>
-            <td>${db.locations[x.locIdx]}</td>
-            <td class="numeric">${fmtDollar(x.amount)}</td>
-            <td class="numeric font-mono">${x.percent.toFixed(2)}%</td>
-        `;
+        const label = (prog && prog !== 'Unknown') ? prog : (full ? full.substring(0,60) + '...' : '—');
+        const tip   = full ? full.replace(/"/g, '&quot;') : '';
+
+        tr.innerHTML =
+            '<td><strong>' + db.recipients[x.recipIdx] + '</strong></td>' +
+            '<td><span class="program-badge" title="' + tip + '">' + label + '</span></td>' +
+            '<td>' + db.agencies[x.agIdx] + '</td>' +
+            '<td>' + db.locations[x.locIdx] + '</td>' +
+            '<td class="numeric">' + fmt(x.amount) + '</td>' +
+            '<td class="numeric font-mono">' + x.percent.toFixed(2) + '%</td>';
         tbody.appendChild(tr);
     });
 
     document.getElementById('tableSubtitle').textContent =
-        `Showing ${display.length} of ${list.length.toLocaleString()} recipients · ${selectedYear}`;
+        'Showing ' + display.length + ' of ' + list.length.toLocaleString() + ' recipients \u00b7 ' + selectedYear;
 }
 
-// ── 8. THEME ────────────────────────────────────────────────────
+// ── 11. THEME ──────────────────────────────────────────────────
 function initTheme() {
     const btn = document.getElementById('themeToggle');
     if (!btn) return;
-
     themeMode = localStorage.getItem('td-theme') || 'dark';
     applyTheme(themeMode);
-
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', function() {
         themeMode = themeMode === 'dark' ? 'light' : 'dark';
         applyTheme(themeMode);
         localStorage.setItem('td-theme', themeMode);
@@ -542,103 +530,85 @@ function applyTheme(mode) {
     const icon = document.querySelector('#themeToggle .theme-icon');
     if (mode === 'light') {
         document.body.classList.add('light-mode');
-        if (icon) icon.textContent = '🔆';
+        if (icon) icon.textContent = '\u{1F506}';
     } else {
         document.body.classList.remove('light-mode');
-        if (icon) icon.textContent = '🌙';
+        if (icon) icon.textContent = '\u{1F319}';
     }
 }
 
-// ── 9. CHART OPTIONS ────────────────────────────────────────────
-function verticalBarOpts(stacked) {
-    const muted = getThemeVar('--text-muted') || '#6b7089';
-    const sec   = getThemeVar('--text-secondary') || '#a0a4b8';
-    const card  = getThemeVar('--bg-card') || '#1a1d2e';
-    const prim  = getThemeVar('--text-primary') || '#e8eaf0';
-    const bdr   = getThemeVar('--border') || '#262a3d';
-    const grid  = getThemeVar('--border-light') || '#2d3150';
-
+// ── 12. CHART OPTIONS ──────────────────────────────────────────
+function vBarOpts(stacked) {
+    const muted = cssVar('--text-muted') || '#6b7089';
+    const sec   = cssVar('--text-secondary') || '#a0a4b8';
+    const card  = cssVar('--bg-card') || '#1a1d2e';
+    const prim  = cssVar('--text-primary') || '#e8eaf0';
+    const bdr   = cssVar('--border') || '#262a3d';
+    const grid  = cssVar('--border-light') || '#2d3150';
     return {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
             legend: {
-                display: stacked,
-                position: 'bottom',
+                display: stacked, position: 'bottom',
                 labels: { color: sec, font: { size: 10, family: 'Inter' }, boxWidth: 12 }
             },
             tooltip: {
                 backgroundColor: card, titleColor: prim, bodyColor: sec,
                 borderColor: bdr, borderWidth: 1, padding: 12, cornerRadius: 8,
-                callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtDollar(ctx.parsed.y)}` }
+                callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.parsed.y) }
             }
         },
         scales: {
-            y: {
-                stacked,
-                grid: { color: grid },
-                ticks: { color: muted, font: { family: 'Inter', size: 10 }, callback: fmtDollar }
-            },
-            x: {
-                stacked,
-                grid: { display: false },
-                ticks: { color: muted, font: { family: 'Inter', size: 10 } }
-            }
+            y: { stacked, grid: { color: grid },
+                 ticks: { color: muted, font: { family:'Inter', size:10 }, callback: fmt } },
+            x: { stacked, grid: { display: false },
+                 ticks: { color: muted, font: { family:'Inter', size:10 } } }
         }
     };
 }
 
-function horizontalBarOpts() {
-    const muted = getThemeVar('--text-muted') || '#6b7089';
-    const sec   = getThemeVar('--text-secondary') || '#a0a4b8';
-    const card  = getThemeVar('--bg-card') || '#1a1d2e';
-    const prim  = getThemeVar('--text-primary') || '#e8eaf0';
-    const bdr   = getThemeVar('--border') || '#262a3d';
-    const grid  = getThemeVar('--border-light') || '#2d3150';
-
+function hBarOpts() {
+    const muted = cssVar('--text-muted') || '#6b7089';
+    const sec   = cssVar('--text-secondary') || '#a0a4b8';
+    const card  = cssVar('--bg-card') || '#1a1d2e';
+    const prim  = cssVar('--text-primary') || '#e8eaf0';
+    const bdr   = cssVar('--border') || '#262a3d';
+    const grid  = cssVar('--border-light') || '#2d3150';
     return {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
             tooltip: {
                 backgroundColor: card, titleColor: prim, bodyColor: sec,
                 borderColor: bdr, borderWidth: 1, padding: 12, cornerRadius: 8,
-                callbacks: { label: ctx => `Amount: ${fmtDollar(ctx.parsed.x)}` }
+                callbacks: { label: ctx => 'Amount: ' + fmt(ctx.parsed.x) }
             }
         },
         scales: {
-            x: {
-                grid: { color: grid },
-                ticks: { color: muted, font: { family: 'Inter', size: 10 }, callback: fmtDollar }
-            },
-            y: {
-                grid: { display: false },
-                ticks: { color: sec, font: { family: 'Inter', size: 10 } }
-            }
+            x: { grid: { color: grid },
+                 ticks: { color: muted, font: { family:'Inter', size:10 }, callback: fmt } },
+            y: { grid: { display: false },
+                 ticks: { color: sec, font: { family:'Inter', size:10 } } }
         }
     };
 }
 
-// ── 10. COLOUR HELPERS ──────────────────────────────────────────
-function gradientColors(n, from, to) {
+// ── 13. COLOURS ────────────────────────────────────────────────
+function gradColors(n, from, to) {
     if (n <= 1) return [from];
     const f = hexRgb(from), t = hexRgb(to);
-    return Array.from({ length: n }, (_, i) => {
+    return Array.from({length: n}, (_, i) => {
         const p = i / (n - 1);
-        return `rgb(${lerp(f.r,t.r,p)},${lerp(f.g,t.g,p)},${lerp(f.b,t.b,p)})`;
+        return 'rgb(' + lerp(f.r,t.r,p) + ',' + lerp(f.g,t.g,p) + ',' + lerp(f.b,t.b,p) + ')';
     });
 }
-
 function hexRgb(hex) {
     const h = hex.replace('#','');
     return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
 }
+function lerp(a, b, t) { return Math.round(a + (b-a)*t); }
 
-function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
-
-// ── 11. RENDER ALL ──────────────────────────────────────────────
+// ── 14. RENDER ALL ─────────────────────────────────────────────
 function renderAll() {
     renderKPIs();
     renderGraph1();
@@ -646,5 +616,5 @@ function renderAll() {
     renderTable();
 }
 
-// ── START ───────────────────────────────────────────────────────
+// ── GO ─────────────────────────────────────────────────────────
 init();

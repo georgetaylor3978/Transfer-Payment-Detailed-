@@ -1,148 +1,142 @@
-const fs = require('fs');
-const readline = require('readline');
+﻿/* ================================================================
+   process_data.js
+   Run this from the Transfer-Detail-Dashboard folder:
+       node process_data.js
+
+   Reads CSVs from:
+       C:\Users\kroon\.gemini\antigravity\playground\TransferDetail\
+
+   Writes data.json to the current directory (dashboard folder).
+   ================================================================ */
+
+const fs   = require('fs');
 const path = require('path');
+const rl   = require('readline');
 
-const csvPath = 'C:/Users/kroon/.gemini/antigravity/playground/TransferDetail/TransferDetail.csv';
-const mapPath = 'C:/Users/kroon/.gemini/antigravity/playground/TransferDetail/AgencyMap.csv';
-const outJsonPath = 'C:/Users/kroon/.gemini/antigravity/playground/pyro-lagoon/transfer-detail/data.json';
+// ── Paths ──────────────────────────────────────────────────────
+const DATA_DIR = 'C:/Users/kroon/.gemini/antigravity/playground/TransferDetail';
+const CSV_PATH = path.join(DATA_DIR, 'TransferDetail.csv');
+const MAP_PATH = path.join(DATA_DIR, 'AgencyMap.csv');
+const OUT_PATH = path.join(__dirname, 'data.json');
 
+// ── Helpers ────────────────────────────────────────────────────
 function parseCSVLine(line) {
     const parts = [];
-    let current = '';
-    let inQuotes = false;
+    let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') {
-            if (inQuotes && line[i + 1] === '"') {
-                current += '"';
-                i++;
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            parts.push(current.trim());
-            current = '';
+        const c = line[i];
+        if (c === '"') {
+            if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+            else inQ = !inQ;
+        } else if (c === ',' && !inQ) {
+            parts.push(cur.trim());
+            cur = '';
         } else {
-            current += char;
+            cur += c;
         }
     }
-    parts.push(current.trim());
+    parts.push(cur.trim());
     return parts;
 }
 
-// 1. Load AgencyMap
-const agencyToDept = {};
-const deptsSet = new Set(['Other / Unmapped']);
-if (fs.existsSync(mapPath)) {
-    const mapContent = fs.readFileSync(mapPath, 'utf8');
-    const mapLines = mapContent.split(/\r?\n/);
-    for (const line of mapLines) {
-        if (!line.trim() || line.startsWith('Department,Agency')) continue;
-        const parts = parseCSVLine(line);
-        if (parts.length >= 2) {
-            const dept = parts[0] || 'Other / Unmapped';
-            const agency = parts[1];
-            if (agency) {
-                agencyToDept[agency.toLowerCase()] = dept;
-                deptsSet.add(dept);
-            }
-        }
-    }
-}
-const departments = Array.from(deptsSet).sort();
-const deptToIndex = {};
-departments.forEach((d, idx) => { deptToIndex[d] = idx; });
-
-console.log(`Loaded ${departments.length} departments from AgencyMap.`);
-
-// 2. Setup Dictionaries
-const agencies = [];
-const agencyToIndex = {};
-const programs = [];
-const programToIndex = {};
-const programShortNames = [];
-const shortNameToIndex = {};
-const locations = [];
-const locationToIndex = {};
-const cities = [];
-const cityToIndex = {};
-const recipientGroups = [];
-const groupToIndex = {};
-const recipients = [];
-const recipientToIndex = {};
-
-// Helper to get index
-function getIndex(val, list, map) {
-    const cleanVal = (val || 'Unknown').trim();
-    const key = cleanVal.toLowerCase();
-    if (map[key] !== undefined) return map[key];
+function getIdx(val, list, map) {
+    const key = (val || 'Unknown').trim();
+    const lk  = key.toLowerCase();
+    if (map[lk] !== undefined) return map[lk];
     const idx = list.length;
-    list.push(cleanVal);
-    map[key] = idx;
+    list.push(key);
+    map[lk] = idx;
     return idx;
 }
 
-const agencyToDeptIndex = [];
+// ── 1. Load AgencyMap (Agency → Department) ────────────────────
+const agencyToDept = {};
 
-const rl = readline.createInterface({
-    input: fs.createReadStream(csvPath),
-    crlfDelay: Infinity
-});
+if (!fs.existsSync(MAP_PATH)) {
+    console.warn(`WARNING: AgencyMap.csv not found at ${MAP_PATH}. All agencies will be "Other / Unmapped".`);
+} else {
+    const mapLines = fs.readFileSync(MAP_PATH, 'utf8').split(/\r?\n/);
+    for (const line of mapLines) {
+        if (!line.trim() || line.startsWith('Department,Agency')) continue;
+        const parts = parseCSVLine(line);
+        if (parts.length >= 2 && parts[1]) {
+            agencyToDept[parts[1].toLowerCase()] = parts[0] || 'Other / Unmapped';
+        }
+    }
+    console.log(`Loaded ${Object.keys(agencyToDept).length} agency→department mappings from AgencyMap.csv`);
+}
 
-let lineCount = 0;
+// Build department list
+const deptList  = ['Other / Unmapped'];
+const deptMap   = { 'other / unmapped': 0 };
+Object.values(agencyToDept).forEach(d => getIdx(d, deptList, deptMap));
+
+// ── 2. Dictionary arrays ───────────────────────────────────────
+const agencies         = [], agencyMap        = {};
+const programs         = [], programMap       = {};
+const programShortNames= [], shortNameMap     = {};
+const locations        = [], locationMap      = {};
+const cities           = [], cityMap          = {};
+const recipientGroups  = [], groupMap         = {};
+const recipients       = [], recipientMap     = {};
+
+const agencyToDeptIndex = [];  // agencyIdx → deptIdx
+
+// ── 3. Stream CSV ──────────────────────────────────────────────
+if (!fs.existsSync(CSV_PATH)) {
+    console.error(`ERROR: TransferDetail.csv not found at ${CSV_PATH}`);
+    process.exit(1);
+}
+
+console.log(`Reading ${CSV_PATH} ...`);
+
+const reader = rl.createInterface({ input: fs.createReadStream(CSV_PATH), crlfDelay: Infinity });
 const records = [];
+let lineNum = 0;
 
-rl.on('line', (line) => {
-    lineCount++;
-    if (lineCount === 1) return; // Header
+reader.on('line', line => {
+    lineNum++;
+    if (lineNum === 1) return; // skip header
 
-    const parts = parseCSVLine(line);
-    if (parts.length < 11) return;
+    const p = parseCSVLine(line);
+    if (p.length < 11) return;
 
-    const year = parseInt(parts[0], 10) || 0;
-    const agencyName = parts[1] || 'Unknown';
-    const programName = parts[2] || 'Unknown';
-    const programShortName = parts[3] || 'Unknown';
-    const location = parts[6] || 'Unknown';
-    const city = parts[7] || 'Unknown';
-    const recipientGroup = parts[8] || 'Unknown';
-    const recipient = parts[9] || 'Unknown';
-    const amount = parseFloat(parts[10]) || 0;
+    const year         = parseInt(p[0], 10) || 0;
+    const agencyName   = p[1] || 'Unknown';
+    const programName  = p[2] || 'Unknown';
+    const shortName    = p[3] || 'Unknown';
+    const location     = p[6] || 'Unknown';
+    const city         = p[7] || 'Unknown';
+    const recGroup     = p[8] || 'Unknown';
+    const recipient    = p[9] || 'Unknown';
+    const amount       = parseFloat(p[10]) || 0;
 
-    const agencyIdx = getIndex(agencyName, agencies, agencyToIndex);
-    
-    // Map agency to department
-    if (agencyToDeptIndex[agencyIdx] === undefined) {
+    const agIdx = getIdx(agencyName, agencies, agencyMap);
+
+    // Resolve department for this agency (once per unique agency)
+    if (agencyToDeptIndex[agIdx] === undefined) {
         const deptName = agencyToDept[agencyName.toLowerCase()] || 'Other / Unmapped';
-        agencyToDeptIndex[agencyIdx] = deptToIndex[deptName];
+        agencyToDeptIndex[agIdx] = getIdx(deptName, deptList, deptMap);
     }
 
-    const programIdx = getIndex(programName, programs, programToIndex);
-    const shortNameIdx = getIndex(programShortName, programShortNames, shortNameToIndex);
-    const locationIdx = getIndex(location, locations, locationToIndex);
-    const cityIdx = getIndex(city, cities, cityToIndex);
-    const groupIdx = getIndex(recipientGroup, recipientGroups, groupToIndex);
-    const recipientIdx = getIndex(recipient, recipients, recipientToIndex);
-
-    // Record structure: [year, agencyIdx, programIdx, shortNameIdx, locationIdx, cityIdx, groupIdx, recipientIdx, amount]
     records.push([
         year,
-        agencyIdx,
-        programIdx,
-        shortNameIdx,
-        locationIdx,
-        cityIdx,
-        groupIdx,
-        recipientIdx,
+        agIdx,
+        getIdx(programName,  programs,          programMap),
+        getIdx(shortName,    programShortNames, shortNameMap),
+        getIdx(location,     locations,         locationMap),
+        getIdx(city,         cities,            cityMap),
+        getIdx(recGroup,     recipientGroups,   groupMap),
+        getIdx(recipient,    recipients,        recipientMap),
         amount
     ]);
 });
 
-rl.on('close', () => {
-    console.log(`Processed ${lineCount - 1} records from CSV.`);
-    
+reader.on('close', () => {
+    console.log(`Processed ${records.length.toLocaleString()} records.`);
+
     const db = {
-        departments,
+        departments:       deptList,
         agencies,
         agencyToDeptIndex,
         programs,
@@ -154,12 +148,13 @@ rl.on('close', () => {
         records
     };
 
-    console.log('Writing data.json...');
-    fs.writeFileSync(outJsonPath, JSON.stringify(db));
-    
-    const sizeMB = (fs.statSync(outJsonPath).size / 1024 / 1024).toFixed(2);
-    console.log(`data.json written successfully! Size: ${sizeMB} MB`);
-    console.log(`Unique Recipients: ${recipients.length}`);
-    console.log(`Unique Programs: ${programs.length}`);
-    console.log(`Unique Cities: ${cities.length}`);
+    console.log('Writing data.json ...');
+    fs.writeFileSync(OUT_PATH, JSON.stringify(db));
+
+    const mb = (fs.statSync(OUT_PATH).size / 1024 / 1024).toFixed(2);
+    console.log(`Done! data.json is ${mb} MB`);
+    console.log(`  Departments: ${deptList.length}`);
+    console.log(`  Agencies:    ${agencies.length}`);
+    console.log(`  Programs:    ${programs.length}`);
+    console.log(`  Recipients:  ${recipients.length}`);
 });

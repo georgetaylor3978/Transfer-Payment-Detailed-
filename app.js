@@ -55,7 +55,9 @@ async function init() {
     buildYearSelect();
     initCombineToggle();
     initTableControls();
+    initDropdownDismiss();
     renderAll();
+    initRecipientChart();
 }
 
 // â”€â”€ 2. HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

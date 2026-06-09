@@ -55,7 +55,7 @@ const agencyToDept = {};
 if (!fs.existsSync(MAP_PATH)) {
     console.warn(`WARNING: AgencyMap.csv not found at ${MAP_PATH}. All agencies will be "Other / Unmapped".`);
 } else {
-    const mapLines = fs.readFileSync(MAP_PATH, 'utf8').split(/\r?\n/);
+    const mapLines = fs.readFileSync(MAP_PATH, 'latin1').split(/\r?\n/);
     for (const line of mapLines) {
         if (!line.trim() || line.startsWith('Department,Agency')) continue;
         const parts = parseCSVLine(line);
@@ -90,7 +90,7 @@ if (!fs.existsSync(CSV_PATH)) {
 
 console.log(`Reading ${CSV_PATH} ...`);
 
-const reader = rl.createInterface({ input: fs.createReadStream(CSV_PATH), crlfDelay: Infinity });
+const reader = rl.createInterface({ input: fs.createReadStream(CSV_PATH, { encoding: 'latin1' }), crlfDelay: Infinity });
 const records = [];
 let lineNum = 0;
 

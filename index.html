@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transfer Payments — Detail Dashboard</title>
-    <meta name="description" content="Canada Federal Government Transfer Payments — Detailed recipient-level spending data from 2012 to 2026.">
+    <title>Transfer Payments â€” Detail Dashboard</title>
+    <meta name="description" content="Canada Federal Government Transfer Payments â€” Detailed recipient-level spending data from 2012 to 2026.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -141,6 +141,43 @@
             <canvas id="chart2"></canvas>
         </div>
     </section>
+    <!-- Recipient Over Time Chart -->
+    <section class="chart-section" id="recipientSection">
+        <div class="chart-header">
+            <div>
+                <h2>Recipient Spending Over Time</h2>
+                <p class="section-desc" id="recipientSubtitle">Search and select recipients to compare their spending history</p>
+            </div>
+            <div class="recipient-controls">
+                <label class="ctrl-label">Combine Selected</label>
+                <label class="switch">
+                    <input type="checkbox" id="recipientCombine">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Search box -->
+        <div class="recipient-search-wrap">
+            <div class="recipient-search-box" id="recipientSearchBox">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" id="recipientSearchInput" placeholder="Search recipients to add to chart..." autocomplete="off">
+                <span class="search-clear" id="recipientSearchClear" title="Clear search">&times;</span>
+            </div>
+            <div class="recipient-results" id="recipientResults"></div>
+        </div>
+
+        <!-- Selected chips -->
+        <div class="recipient-chips" id="recipientChips">
+            <span class="chips-empty-msg" id="chipsEmptyMsg">No recipients selected &mdash; search above to add</span>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-wrapper chart-wrapper-recipient" id="recipientChartWrap">
+            <canvas id="chart3"></canvas>
+        </div>
+    </section>
+
 
     <section class="chart-section table-section">
         <div class="chart-header">

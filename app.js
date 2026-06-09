@@ -1,11 +1,11 @@
-/* ================================================================
-   Transfer Detail Dashboard — app.js
+﻿/* ================================================================
+   Transfer Detail Dashboard â€” app.js
    Records: [year, agencyIdx, programIdx, shortNameIdx, locationIdx, cityIdx, groupIdx, recipientIdx, amount]
    ================================================================ */
 
 'use strict';
 
-// ── State ──────────────────────────────────────────────────────
+// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let db = null;
 
 let selDeptIdx    = -1;   // -1 = <ALL>
@@ -28,7 +28,7 @@ const PALETTE = [
     '#6366f1','#84cc16','#e11d48','#0ea5e9'
 ];
 
-// ── 1. INIT ────────────────────────────────────────────────────
+// â”€â”€ 1. INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function init() {
     const status = document.getElementById('dataStatus');
     try {
@@ -58,7 +58,7 @@ async function init() {
     renderAll();
 }
 
-// ── 2. HELPERS ─────────────────────────────────────────────────
+// â”€â”€ 2. HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getYears() {
     return [...new Set(db.records.map(r => r[0]))].sort((a, b) => a - b);
 }
@@ -84,7 +84,7 @@ function cssVar(v) {
     return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 }
 
-// ── 3. DROPDOWN WIRING (called once) ──────────────────────────
+// â”€â”€ 3. DROPDOWN WIRING (called once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Each dropdown: trigger opens/closes menu; click outside closes all.
 function wireDropdowns() {
     const dds = [
@@ -95,17 +95,17 @@ function wireDropdowns() {
 
     dds.forEach(dd => {
         const trigger = document.getElementById(dd.trigger);
-        const menu    = document.getElementById(dd.menu);
+        const wrapper = trigger.closest('.custom-dropdown');
 
         trigger.addEventListener('click', function(e) {
             e.stopPropagation();
-            const isOpen = menu.classList.contains('open');
+            const isOpen = wrapper.classList.contains('open');
             closeAll();
-            if (!isOpen) menu.classList.add('open');
+            if (!isOpen) wrapper.classList.add('open');
         });
     });
 
-    // Search boxes – one-time wire (lists are repopulated but search still works)
+    // Search boxes â€“ one-time wire (lists are repopulated but search still works)
     wireSearch('deptSearch',   'deptList');
     wireSearch('agencySearch', 'agencyList');
     wireSearch('locSearch',    'locList');
@@ -114,8 +114,8 @@ function wireDropdowns() {
 }
 
 function closeAll() {
-    ['deptMenu','agencyMenu','locMenu'].forEach(id =>
-        document.getElementById(id).classList.remove('open')
+    document.querySelectorAll('.custom-dropdown.open').forEach(el =>
+        el.classList.remove('open')
     );
 }
 
@@ -128,7 +128,7 @@ function wireSearch(searchId, listId) {
     });
 }
 
-// ── 4. FILL DROPDOWN LISTS (called on each state change) ───────
+// â”€â”€ 4. FILL DROPDOWN LISTS (called on each state change) â”€â”€â”€â”€â”€â”€â”€
 function setLabel(triggerId, text) {
     document.querySelector('#' + triggerId + ' .dropdown-label').textContent = text;
 }
@@ -205,7 +205,7 @@ function fillLocList() {
     });
 }
 
-// ── 5. YEAR SELECT ─────────────────────────────────────────────
+// â”€â”€ 5. YEAR SELECT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildYearSelect() {
     const sel = document.getElementById('yearSelect');
     sel.innerHTML = '';
@@ -224,7 +224,7 @@ function buildYearSelect() {
     });
 }
 
-// ── 6. COMBINE TOGGLE ──────────────────────────────────────────
+// â”€â”€ 6. COMBINE TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initCombineToggle() {
     const toggle = document.getElementById('combineToggle');
     toggle.checked = combineAgencies;
@@ -234,7 +234,7 @@ function initCombineToggle() {
     });
 }
 
-// ── 7. KPIs ────────────────────────────────────────────────────
+// â”€â”€ 7. KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderKPIs() {
     const rows     = getFiltered();
     const yearRows = rows.filter(r => r[0] === selectedYear);
@@ -257,7 +257,7 @@ function renderKPIs() {
     document.getElementById('kpiYearLabel').textContent  = String(selectedYear);
 }
 
-// ── 8. CHART 1: Time series ────────────────────────────────────
+// â”€â”€ 8. CHART 1: Time series â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderGraph1() {
     if (c1) c1.destroy();
 
@@ -312,7 +312,7 @@ function renderGraph1() {
                     });
                 });
         } else {
-            title = 'Spend Over Time by Agency — ' + db.departments[selDeptIdx];
+            title = 'Spend Over Time by Agency â€” ' + db.departments[selDeptIdx];
             const byAg = {};
             rows.forEach(r => {
                 if (!byAg[r[1]]) byAg[r[1]] = {};
@@ -347,7 +347,7 @@ function renderGraph1() {
     });
 }
 
-// ── 9. CHART 2: Year breakdown ─────────────────────────────────
+// â”€â”€ 9. CHART 2: Year breakdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderGraph2() {
     if (c2) c2.destroy();
 
@@ -387,8 +387,8 @@ function renderGraph2() {
     wrapper.style.height = Math.max(400, labels.length * 30) + 'px';
 
     const title = selDeptIdx === -1
-        ? 'Transfer Payments by Department — ' + selectedYear
-        : 'Agency Spending: ' + db.departments[selDeptIdx] + ' — ' + selectedYear;
+        ? 'Transfer Payments by Department â€” ' + selectedYear
+        : 'Agency Spending: ' + db.departments[selDeptIdx] + ' â€” ' + selectedYear;
     document.getElementById('chart2Title').textContent = title;
 
     const colors = gradColors(top.length, '#3b82f6', '#06b6d4');
@@ -410,7 +410,7 @@ function renderGraph2() {
     });
 }
 
-// ── 10. TABLE ──────────────────────────────────────────────────
+// â”€â”€ 10. TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initTableControls() {
     document.getElementById('tableSearch').addEventListener('input', function() {
         searchQ = this.value;
@@ -495,7 +495,7 @@ function renderTable() {
         const tr   = document.createElement('tr');
         const prog = db.programShortNames[x.shortIdx];
         const full = db.programs[x.progIdx];
-        const label = (prog && prog !== 'Unknown') ? prog : (full ? full.substring(0,60) + '...' : '—');
+        const label = (prog && prog !== 'Unknown') ? prog : (full ? full.substring(0,60) + '...' : 'â€”');
         const tip   = full ? full.replace(/"/g, '&quot;') : '';
 
         tr.innerHTML =
@@ -512,7 +512,7 @@ function renderTable() {
         'Showing ' + display.length + ' of ' + list.length.toLocaleString() + ' recipients \u00b7 ' + selectedYear;
 }
 
-// ── 11. THEME ──────────────────────────────────────────────────
+// â”€â”€ 11. THEME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initTheme() {
     const btn = document.getElementById('themeToggle');
     if (!btn) return;
@@ -537,7 +537,7 @@ function applyTheme(mode) {
     }
 }
 
-// ── 12. CHART OPTIONS ──────────────────────────────────────────
+// â”€â”€ 12. CHART OPTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function vBarOpts(stacked) {
     const muted = cssVar('--text-muted') || '#6b7089';
     const sec   = cssVar('--text-secondary') || '#a0a4b8';
@@ -593,7 +593,7 @@ function hBarOpts() {
     };
 }
 
-// ── 13. COLOURS ────────────────────────────────────────────────
+// â”€â”€ 13. COLOURS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function gradColors(n, from, to) {
     if (n <= 1) return [from];
     const f = hexRgb(from), t = hexRgb(to);
@@ -608,7 +608,7 @@ function hexRgb(hex) {
 }
 function lerp(a, b, t) { return Math.round(a + (b-a)*t); }
 
-// ── 14. RENDER ALL ─────────────────────────────────────────────
+// â”€â”€ 14. RENDER ALL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderAll() {
     renderKPIs();
     renderGraph1();
@@ -616,5 +616,5 @@ function renderAll() {
     renderTable();
 }
 
-// ── GO ─────────────────────────────────────────────────────────
+// â”€â”€ GO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 init();

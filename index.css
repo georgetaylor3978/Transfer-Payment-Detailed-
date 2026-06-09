@@ -1,8 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════
-   Transfer Detail Dashboard — index.css
-   ═══════════════════════════════════════════════════════════════ */
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Transfer Detail Dashboard â€” index.css
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── CSS Variables ── */
+/* â”€â”€ CSS Variables â”€â”€ */
 :root {
     --bg-primary:   #0d0f1a;
     --bg-secondary: #13162a;
@@ -38,7 +38,7 @@ body.light-mode {
     --shadow:       0 4px 24px rgba(0,0,0,.08);
 }
 
-/* ── Reset & Base ── */
+/* â”€â”€ Reset & Base â”€â”€ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
@@ -55,7 +55,7 @@ body {
 a { color: var(--accent-blue); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ── Header ── */
+/* â”€â”€ Header â”€â”€ */
 .header {
     background: linear-gradient(135deg, #0d0f1a 0%, #13162a 40%, #1a1d35 100%);
     border-bottom: 1px solid var(--border);
@@ -155,7 +155,7 @@ h1 {
 .data-status.loaded  { background: rgba(16,185,129,.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,.3); }
 .data-status.error   { background: rgba(244,63,94,.15);  color: var(--accent-rose);  border: 1px solid rgba(244,63,94,.3); }
 
-/* ── Controls Bar ── */
+/* â”€â”€ Controls Bar â”€â”€ */
 .controls-bar {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
@@ -196,7 +196,7 @@ h1 {
     letter-spacing: .08em;
 }
 
-/* ── Custom Dropdown ── */
+/* â”€â”€ Custom Dropdown â”€â”€ */
 .custom-dropdown { position: relative; }
 
 .dropdown-trigger {
@@ -285,7 +285,7 @@ h1 {
 .dd-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
 .dd-item.selected { color: var(--accent-blue); font-weight: 600; }
 
-/* ── Toggle Group ── */
+/* â”€â”€ Toggle Group â”€â”€ */
 .toggle-group {
     flex-direction: row;
     align-items: center;
@@ -316,7 +316,7 @@ h1 {
 input:checked + .slider { background: var(--accent-blue); }
 input:checked + .slider:before { transform: translateX(20px); }
 
-/* ── Definition Box ── */
+/* â”€â”€ Definition Box â”€â”€ */
 .definition-box {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -330,7 +330,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 .definition-box strong { font-size: .8rem; color: var(--text-primary); display: block; margin-bottom: 4px; }
 .definition-box p { font-size: .75rem; color: var(--text-muted); line-height: 1.5; }
 
-/* ── KPI Row ── */
+/* â”€â”€ KPI Row â”€â”€ */
 .kpi-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -378,7 +378,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     line-height: 1;
 }
 
-/* ── Main Content ── */
+/* â”€â”€ Main Content â”€â”€ */
 .main-content {
     max-width: 1600px;
     margin: 0 auto;
@@ -388,7 +388,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     gap: 24px;
 }
 
-/* ── Chart Sections ── */
+/* â”€â”€ Chart Sections â”€â”€ */
 .chart-section {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -444,7 +444,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     transition: height .3s;
 }
 
-/* ── Table Section ── */
+/* â”€â”€ Table Section â”€â”€ */
 .table-section {}
 
 .section-desc {
@@ -507,8 +507,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .premium-table th.sortable { cursor: pointer; }
 .premium-table th.sortable:hover { color: var(--accent-blue); }
-.premium-table th.sort-asc  .sort-icon::after { content: ' ↑'; color: var(--accent-blue); }
-.premium-table th.sort-desc .sort-icon::after { content: ' ↓'; color: var(--accent-blue); }
+.premium-table th.sort-asc  .sort-icon::after { content: ' â†‘'; color: var(--accent-blue); }
+.premium-table th.sort-desc .sort-icon::after { content: ' â†“'; color: var(--accent-blue); }
 .premium-table th.numeric { text-align: right; }
 
 .premium-table td {
@@ -540,7 +540,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     cursor: help;
 }
 
-/* ── Footer ── */
+/* â”€â”€ Footer â”€â”€ */
 .footer {
     text-align: center;
     padding: 24px 28px;
@@ -549,7 +549,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     border-top: 1px solid var(--border);
 }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 900px) {
     .header-content { padding: 12px 16px; }
     .controls-content { padding: 0 16px; }

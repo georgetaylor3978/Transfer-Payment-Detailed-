@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -144,6 +144,27 @@
         </div>
     </section>
 
+    <!-- Recipient Spending Over Time -->
+    <section class="chart-section" id="recipientSection">
+        <div class="chart-header">
+            <div>
+                <h2>Recipient Spending Over Time</h2>
+                <p class="section-desc" id="recipientSubtitle">Check recipients in the table above to chart their spending history</p>
+            </div>
+            <div class="recipient-controls">
+                <label class="ctrl-label">Combine</label>
+                <label class="switch">
+                    <input type="checkbox" id="recipientCombine">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+        <div class="chart-wrapper chart-wrapper-recipient" id="recipientChartWrap">
+            <div class="chart-placeholder">Check recipients in the table above to chart their spending over time</div>
+        </div>
+    </section>
+
+
     <!-- Recipients Breakdown Table -->
     <section class="chart-section table-section">
         <div class="chart-header">
@@ -180,26 +201,6 @@
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
-        </div>
-    </section>
-
-    <!-- Recipient Spending Over Time -->
-    <section class="chart-section" id="recipientSection">
-        <div class="chart-header">
-            <div>
-                <h2>Recipient Spending Over Time</h2>
-                <p class="section-desc" id="recipientSubtitle">Check recipients in the table above to chart their spending history</p>
-            </div>
-            <div class="recipient-controls">
-                <label class="ctrl-label">Combine</label>
-                <label class="switch">
-                    <input type="checkbox" id="recipientCombine">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </div>
-        <div class="chart-wrapper chart-wrapper-recipient" id="recipientChartWrap">
-            <div class="chart-placeholder">Check recipients in the table above to chart their spending over time</div>
         </div>
     </section>
 

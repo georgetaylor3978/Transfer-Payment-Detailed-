@@ -1,16 +1,16 @@
-﻿<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transfer Payments — Detail Dashboard</title>
-    <meta name="description" content="Canada Federal Government Transfer Payments — Detailed recipient-level spending data from 2012 to 2026.">
+    <title>Transfer Payments &mdash; Detail Dashboard</title>
+    <meta name="description" content="Canada Federal Government Transfer Payments &mdash; Detailed recipient-level spending data from 2012 to 2026.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="index.css">
 </head>
-<body>
+<body class="light-mode">
 
 <!-- HEADER -->
 <header class="header" id="banner">
@@ -25,7 +25,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <button id="themeToggle" class="theme-toggle-btn" title="Toggle Light/Dark"><span class="theme-icon">&#127769;</span></button>
+            <button id="themeToggle" class="theme-toggle-btn" title="Toggle Light/Dark"><span class="theme-icon">&#128262;</span></button>
             <a href="https://open.canada.ca/data/en/dataset/2c408900-c540-4a98-994e-06465b15c27a" target="_blank" rel="noopener noreferrer" class="source-link" title="Open Canada Data Source">&#128202; Source</a>
             <div class="data-status loading" id="dataStatus">&#9201; Loading&hellip;</div>
         </div>
@@ -79,10 +79,10 @@
                 </div>
             </div>
 
-            <div class="control-group toggle-group" id="combineToggleGroup">
+            <div class="control-group toggle-group">
                 <label>Combine Agencies</label>
                 <label class="switch">
-                    <input type="checkbox" id="combineToggle" checked>
+                    <input type="checkbox" id="combineToggle">
                     <span class="slider round"></span>
                 </label>
             </div>
@@ -122,6 +122,7 @@
 <!-- MAIN -->
 <main class="main-content">
 
+    <!-- Chart 1: Time series -->
     <section class="chart-section">
         <div class="chart-header">
             <h2 id="chart1Title">Total Transfer Payments Over Time</h2>
@@ -129,6 +130,7 @@
         <div class="chart-wrapper"><canvas id="chart1"></canvas></div>
     </section>
 
+    <!-- Chart 2: Year breakdown -->
     <section class="chart-section">
         <div class="chart-header">
             <h2 id="chart2Title">Breakdown by Agency</h2>
@@ -141,58 +143,24 @@
             <canvas id="chart2"></canvas>
         </div>
     </section>
-    <!-- Recipient Over Time Chart -->
-    <section class="chart-section" id="recipientSection">
-        <div class="chart-header">
-            <div>
-                <h2>Recipient Spending Over Time</h2>
-                <p class="section-desc" id="recipientSubtitle">Search and select recipients to compare their spending history</p>
-            </div>
-            <div class="recipient-controls">
-                <label class="ctrl-label">Combine Selected</label>
-                <label class="switch">
-                    <input type="checkbox" id="recipientCombine">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </div>
 
-        <!-- Search box -->
-        <div class="recipient-search-wrap">
-            <div class="recipient-search-box" id="recipientSearchBox">
-                <span class="search-icon">&#128269;</span>
-                <input type="text" id="recipientSearchInput" placeholder="Search recipients to add to chart..." autocomplete="off">
-                <span class="search-clear" id="recipientSearchClear" title="Clear search">&times;</span>
-            </div>
-            <div class="recipient-results" id="recipientResults"></div>
-        </div>
-
-        <!-- Selected chips -->
-        <div class="recipient-chips" id="recipientChips">
-            <span class="chips-empty-msg" id="chipsEmptyMsg">No recipients selected &mdash; search above to add</span>
-        </div>
-
-        <!-- Chart -->
-        <div class="chart-wrapper chart-wrapper-recipient" id="recipientChartWrap">
-            <canvas id="chart3"></canvas>
-        </div>
-    </section>
-
-
+    <!-- Recipients Breakdown Table -->
     <section class="chart-section table-section">
         <div class="chart-header">
             <div>
                 <h2 id="tableTitle">Recipients Breakdown</h2>
-                <p class="section-desc" id="tableSubtitle">Top 100 recipients for selected filters and year</p>
+                <p class="section-desc" id="tableSubtitle">Top 200 recipients for selected filters and year</p>
             </div>
-            <div class="table-search-wrap">
-                <input type="text" id="tableSearch" placeholder="Search recipient, program, agency&#8230;">
+            <div class="table-actions">
+                <span class="selection-count" id="selectionCount"></span>
+                <button class="clear-all-btn" id="tableClearAll">Clear All</button>
             </div>
         </div>
         <div class="table-container">
             <table class="premium-table">
                 <thead>
                     <tr>
+                        <th class="check-col"><input type="checkbox" id="selectAllCheck" title="Select / deselect all visible"></th>
                         <th class="sortable" data-sort="recipient">Recipient <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="program">Program <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="agency">Agency <span class="sort-icon"></span></th>
@@ -200,9 +168,38 @@
                         <th class="sortable numeric" data-sort="amount">Amount <span class="sort-icon"></span></th>
                         <th class="numeric">% of Total</th>
                     </tr>
+                    <tr class="filter-row">
+                        <td></td>
+                        <td><input type="text" id="filter_recipient" placeholder="Filter&#8230;" class="col-filter"></td>
+                        <td><input type="text" id="filter_program"   placeholder="Filter&#8230;" class="col-filter"></td>
+                        <td><input type="text" id="filter_agency"    placeholder="Filter&#8230;" class="col-filter"></td>
+                        <td><input type="text" id="filter_location"  placeholder="Filter&#8230;" class="col-filter"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
+        </div>
+    </section>
+
+    <!-- Recipient Spending Over Time -->
+    <section class="chart-section" id="recipientSection">
+        <div class="chart-header">
+            <div>
+                <h2>Recipient Spending Over Time</h2>
+                <p class="section-desc" id="recipientSubtitle">Check recipients in the table above to chart their spending history</p>
+            </div>
+            <div class="recipient-controls">
+                <label class="ctrl-label">Combine</label>
+                <label class="switch">
+                    <input type="checkbox" id="recipientCombine">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+        <div class="chart-wrapper chart-wrapper-recipient" id="recipientChartWrap">
+            <div class="chart-placeholder">Check recipients in the table above to chart their spending over time</div>
         </div>
     </section>
 

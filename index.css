@@ -726,3 +726,106 @@ input:checked + .slider:before { transform: translateX(20px); }
     font-size: .9rem;
     font-style: italic;
 }
+
+/* ── Table filter row & checkboxes ── */
+.filter-row td {
+    padding: 4px 8px;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--accent-blue);
+}
+
+.col-filter {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: .78rem;
+    color: var(--text-primary);
+    font-family: var(--font);
+    outline: none;
+    transition: border-color .2s;
+}
+.col-filter:focus { border-color: var(--accent-blue); }
+
+.check-col {
+    width: 36px;
+    text-align: center;
+    padding-left: 12px !important;
+    flex-shrink: 0;
+}
+
+.row-check {
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent-blue);
+}
+
+.premium-table tbody tr.row-selected {
+    background: rgba(59,130,246,.08);
+}
+.premium-table tbody tr.row-selected:hover {
+    background: rgba(59,130,246,.14);
+}
+.premium-table tbody tr { cursor: pointer; }
+
+/* ── Table actions (Clear All + count) ── */
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.selection-count {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+    min-width: 80px;
+    text-align: right;
+}
+
+.clear-all-btn {
+    background: transparent;
+    border: 1px solid var(--accent-rose);
+    border-radius: 20px;
+    color: var(--accent-rose);
+    font-size: .75rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: var(--font);
+    white-space: nowrap;
+}
+.clear-all-btn:hover { background: var(--accent-rose); color: #fff; }
+
+/* ── Recipient chart section ── */
+.recipient-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.ctrl-label {
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.chart-wrapper-recipient {
+    height: 340px;
+}
+
+.chart-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: .9rem;
+    font-style: italic;
+}

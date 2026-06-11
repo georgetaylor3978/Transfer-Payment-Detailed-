@@ -1,11 +1,11 @@
-/* ================================================================
+﻿/* ================================================================
    Transfer Detail Dashboard - app.js
    Records: [year, agencyIdx, programIdx, shortNameIdx, locationIdx,
              cityIdx, groupIdx, recipientIdx, amount]
    ================================================================ */
 'use strict';
 
-// ── State ──────────────────────────────────────────────────────
+// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let db = null;
 
 let selDeptIdx    = -1;
@@ -44,7 +44,7 @@ const CHIP_COLORS = [
     { border:'#84cc16', bg:'rgba(132,204,22,.15)'  }
 ];
 
-// ── 1. INIT ────────────────────────────────────────────────────
+// â”€â”€ 1. INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function init() {
     const status = document.getElementById('dataStatus');
     try {
@@ -76,7 +76,7 @@ async function init() {
     renderRecipientChart();
 }
 
-// ── 2. HELPERS ─────────────────────────────────────────────────
+// â”€â”€ 2. HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getYears() {
     return [...new Set(db.records.map(r => r[0]))].sort((a, b) => a - b);
 }
@@ -102,7 +102,7 @@ function cssVar(v) {
     return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 }
 
-// ── 3. DROPDOWNS ───────────────────────────────────────────────
+// â”€â”€ 3. DROPDOWNS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function wireDropdowns() {
     [
         { trigger: 'deptTrigger',   menu: 'deptMenu'   },
@@ -141,7 +141,7 @@ function wireSearch(searchId, listId) {
 
 function initDropdownDismiss() { /* wired via document.addEventListener in wireDropdowns */ }
 
-// ── 4. FILL LISTS ──────────────────────────────────────────────
+// â”€â”€ 4. FILL LISTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function setLabel(triggerId, text) {
     document.querySelector('#' + triggerId + ' .dropdown-label').textContent = text;
 }
@@ -194,10 +194,17 @@ function fillLocList() {
     });
 }
 
-// ── 5. YEAR SELECT ─────────────────────────────────────────────
+// â”€â”€ 5. YEAR SELECT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildYearSelect() {
     const sel = document.getElementById('yearSelect');
     sel.innerHTML = '';
+
+    // "All Years" option
+    const allOpt = document.createElement('option');
+    allOpt.value = 'all'; allOpt.textContent = 'All Years';
+    if (selectedYear === null) allOpt.selected = true;
+    sel.appendChild(allOpt);
+
     getYears().slice().reverse().forEach(y => {
         const opt = document.createElement('option');
         opt.value = y; opt.textContent = y;
@@ -205,12 +212,12 @@ function buildYearSelect() {
         sel.appendChild(opt);
     });
     sel.addEventListener('change', function() {
-        selectedYear = parseInt(this.value, 10);
+        selectedYear = this.value === 'all' ? null : parseInt(this.value, 10);
         renderKPIs(); renderGraph2(); renderTable();
     });
 }
 
-// ── 6. COMBINE TOGGLE ──────────────────────────────────────────
+// â”€â”€ 6. COMBINE TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initCombineToggle() {
     const toggle = document.getElementById('combineToggle');
     toggle.checked = combineAgencies;
@@ -220,7 +227,7 @@ function initCombineToggle() {
     });
 }
 
-// ── 7. RECIPIENT CHART TOGGLE ──────────────────────────────────
+// â”€â”€ 7. RECIPIENT CHART TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initRecipientToggle() {
     const toggle = document.getElementById('recipientCombine');
     if (!toggle) return;
@@ -231,22 +238,22 @@ function initRecipientToggle() {
     });
 }
 
-// ── 8. KPIs ────────────────────────────────────────────────────
+// â”€â”€ 8. KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderKPIs() {
     const rows     = getFiltered();
-    const yearRows = rows.filter(r => r[0] === selectedYear);
+    const yearRows = selectedYear === null ? rows : rows.filter(r => r[0] === selectedYear);
     let annual = 0, cumulative = 0;
     const programs = new Set(), recipients = new Set();
     rows.forEach(r => { cumulative += r[8]; });
     yearRows.forEach(r => { annual += r[8]; programs.add(r[3]); recipients.add(r[7]); });
-    document.getElementById('kpiAnnual').textContent     = fmt(annual);
+    document.getElementById('kpiAnnual').textContent     = selectedYear === null ? '\u2014' : fmt(annual);
     document.getElementById('kpiCumulative').textContent = fmt(cumulative);
     document.getElementById('kpiPrograms').textContent   = programs.size.toLocaleString();
     document.getElementById('kpiRecipients').textContent = recipients.size.toLocaleString();
-    document.getElementById('kpiYearLabel').textContent  = String(selectedYear);
+    document.getElementById('kpiYearLabel').textContent  = selectedYear === null ? 'All Years' : String(selectedYear);
 }
 
-// ── 9. CHART 1: Time series ────────────────────────────────────
+// â”€â”€ 9. CHART 1: Time series â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderGraph1() {
     if (c1) c1.destroy();
     const rows = getFiltered(), years = getYears();
@@ -297,10 +304,10 @@ function renderGraph1() {
     c1 = new Chart(document.getElementById('chart1'), { type: 'bar', data: { labels: years, datasets }, options: vBarOpts(stacked) });
 }
 
-// ── 10. CHART 2: Year breakdown ────────────────────────────────
+// â”€â”€ 10. CHART 2: Year breakdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderGraph2() {
     if (c2) c2.destroy();
-    const yearRows = getFiltered().filter(r => r[0] === selectedYear);
+    const allRows = getFiltered(); const yearRows = selectedYear === null ? allRows : allRows.filter(r => r[0] === selectedYear);
     const byGroup = {}; let total = 0;
     if (selDeptIdx === -1) {
         yearRows.forEach(r => { const d = db.agencyToDeptIndex[r[1]]; byGroup[d] = (byGroup[d]||0) + r[8]; total += r[8]; });
@@ -317,9 +324,10 @@ function renderGraph2() {
         values.push(total - topSum);
     }
     document.getElementById('chart2Wrapper').style.height = Math.max(400, labels.length * 30) + 'px';
+    const yearLabel = selectedYear === null ? 'All Years' : String(selectedYear);
     const title = selDeptIdx === -1
-        ? 'Transfer Payments by Department \u2014 ' + selectedYear
-        : 'Agency Spending: ' + db.departments[selDeptIdx] + ' \u2014 ' + selectedYear;
+        ? 'Transfer Payments by Department \u2014 ' + yearLabel
+        : 'Agency Spending: ' + db.departments[selDeptIdx] + ' \u2014 ' + yearLabel;
     document.getElementById('chart2Title').textContent = title;
     const colors = gradColors(top.length, '#3b82f6', '#06b6d4');
     if (labels.length > top.length) colors.push('#6b7089');
@@ -330,7 +338,7 @@ function renderGraph2() {
     });
 }
 
-// ── 11. TABLE ──────────────────────────────────────────────────
+// â”€â”€ 11. TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initTableControls() {
     // Sort headers
     document.querySelectorAll('.premium-table th.sortable').forEach(th => {
@@ -412,7 +420,7 @@ function renderTable() {
     if (!tbody) return;
     updateSortIcons();
 
-    const yearRows = getFiltered().filter(r => r[0] === selectedYear);
+    const baseRows = getFiltered(); const yearRows = selectedYear === null ? baseRows : baseRows.filter(r => r[0] === selectedYear);
     const agg = {}; let totalSum = 0;
     yearRows.forEach(r => {
         const key = r[7] + '|' + r[3] + '|' + r[1] + '|' + r[4];
@@ -492,7 +500,7 @@ function renderTable() {
     });
 
     document.getElementById('tableSubtitle').textContent =
-        'Showing ' + display.length + ' of ' + list.length.toLocaleString() + ' recipients \u00b7 ' + selectedYear;
+        'Showing ' + display.length + ' of ' + list.length.toLocaleString() + ' recipients \u00b7 ' + (selectedYear === null ? 'All Years' : selectedYear);
     updateSelectionCount();
 }
 
@@ -500,7 +508,7 @@ function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── 12. RECIPIENT CHART (fed from table selections) ────────────
+// â”€â”€ 12. RECIPIENT CHART (fed from table selections) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderRecipientChart() {
     if (c3) { c3.destroy(); c3 = null; }
 
@@ -580,7 +588,7 @@ function renderRecipientChart() {
     if (sub) sub.textContent = label + (recipientCombine ? ' \u00b7 Combined' : ' \u00b7 Separate lines');
 }
 
-// ── 13. THEME ──────────────────────────────────────────────────
+// â”€â”€ 13. THEME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initTheme() {
     const btn = document.getElementById('themeToggle');
     if (!btn) return;
@@ -606,7 +614,7 @@ function applyTheme(mode) {
     }
 }
 
-// ── 14. CHART OPTIONS ──────────────────────────────────────────
+// â”€â”€ 14. CHART OPTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function vBarOpts(stacked) {
     const muted = cssVar('--text-muted')||'#6b7089', sec=cssVar('--text-secondary')||'#a0a4b8';
     const card=cssVar('--bg-card')||'#1a1d2e', prim=cssVar('--text-primary')||'#e8eaf0';
@@ -643,7 +651,7 @@ function hBarOpts() {
     };
 }
 
-// ── 15. COLOURS ────────────────────────────────────────────────
+// â”€â”€ 15. COLOURS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function gradColors(n, from, to) {
     if (n <= 1) return [from];
     const f = hexRgb(from), t = hexRgb(to);
@@ -652,7 +660,7 @@ function gradColors(n, from, to) {
 function hexRgb(hex) { const h=hex.replace('#',''); return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)}; }
 function lerp(a,b,t) { return Math.round(a+(b-a)*t); }
 
-// ── 16. RENDER ALL ─────────────────────────────────────────────
+// â”€â”€ 16. RENDER ALL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderAll() {
     renderKPIs();
     renderGraph1();
@@ -660,5 +668,5 @@ function renderAll() {
     renderTable();
 }
 
-// ── GO ─────────────────────────────────────────────────────────
+// â”€â”€ GO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 init();

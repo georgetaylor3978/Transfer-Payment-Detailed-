@@ -1,0 +1,7 @@
+﻿# Source data files - kept locally, not pushed to GitHub
+TransferDetail.csv
+AgencyMap.csv
+
+# Windows
+Thumbs.db
+desktop.ini

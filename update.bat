@@ -3,8 +3,8 @@ echo ===============================================================
 echo   Transfer Detail Dashboard - Update ^& Deploy
 echo ===============================================================
 echo.
-echo  Data folder:      C:\Users\kroon\.gemini\antigravity\playground\TransferDetail
-echo  Dashboard folder: %~dp0
+echo  Folder: %~dp0
+echo  (Edit TransferDetail.csv and AgencyMap.csv in this folder)
 echo.
 
 echo [1/3] Compiling data.json from CSV files...
@@ -12,7 +12,7 @@ node "%~dp0process_data.js"
 if %ERRORLEVEL% neq 0 (
     echo.
     echo ERROR: Data compilation failed! Check that TransferDetail.csv
-    echo        exists in your data folder and try again.
+    echo        and AgencyMap.csv exist in this folder and try again.
     pause
     exit /b 1
 )
@@ -20,7 +20,7 @@ if %ERRORLEVEL% neq 0 (
 echo.
 echo [2/3] Staging changes...
 cd /d "%~dp0"
-git add -A
+git add data.json process_data.js app.js index.html index.css update.bat README.md hobo.jpg
 
 echo.
 echo [3/3] Committing and pushing to GitHub...

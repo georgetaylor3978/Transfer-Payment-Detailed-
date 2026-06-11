@@ -14,7 +14,7 @@ const path = require('path');
 const rl   = require('readline');
 
 // ── Paths ──────────────────────────────────────────────────────
-const DATA_DIR = 'C:/Users/kroon/.gemini/antigravity/playground/TransferDetail';
+const DATA_DIR = __dirname;  // CSVs live in the same folder as this script
 const CSV_PATH = path.join(DATA_DIR, 'TransferDetail.csv');
 const MAP_PATH = path.join(DATA_DIR, 'AgencyMap.csv');
 const OUT_PATH = path.join(__dirname, 'data.json');

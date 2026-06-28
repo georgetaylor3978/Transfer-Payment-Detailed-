@@ -128,19 +128,9 @@
             <h2 id="chart1Title">Total Transfer Payments Over Time</h2>
         </div>
         <div class="chart-wrapper"><canvas id="chart1"></canvas></div>
-    </section>
-
-    <!-- Chart 2: Year breakdown -->
-    <section class="chart-section">
-        <div class="chart-header">
-            <h2 id="chart2Title">Breakdown by Agency</h2>
-            <div class="chart-control">
-                <label>Year</label>
-                <select id="yearSelect"></select>
-            </div>
-        </div>
-        <div class="chart-wrapper chart-wrapper-tall" id="chart2Wrapper">
-            <canvas id="chart2"></canvas>
+        <div class="chart-attribution">
+            <img src="wiz logo.png" alt="Logo" class="chart-watermark">
+            <span>Data: Public Accounts of Canada &mdash; Transfer Payments Detail</span>
         </div>
     </section>
 
@@ -161,6 +151,10 @@
         </div>
         <div class="chart-wrapper chart-wrapper-recipient" id="recipientChartWrap">
             <div class="chart-placeholder">Check recipients in the table above to chart their spending over time</div>
+        </div>
+        <div class="chart-attribution">
+            <img src="wiz logo.png" alt="Logo" class="chart-watermark">
+            <span>Data: Public Accounts of Canada &mdash; Transfer Payments Detail</span>
         </div>
     </section>
 
@@ -192,7 +186,7 @@
                     </tr>
                     <tr class="filter-row">
                         <td></td>
-                        <td><select id="tableYearFilter" class="col-filter year-filter"><option value="all">All Years</option></select></td>
+                        <td><select id="tableYearFilter" class="col-filter year-filter"></select></td>
                         <td><input type="text" id="filter_recipient" placeholder="Filter&#8230;" class="col-filter"></td>
                         <td><input type="text" id="filter_program"   placeholder="Filter&#8230;" class="col-filter"></td>
                         <td><input type="text" id="filter_agency"    placeholder="Filter&#8230;" class="col-filter"></td>

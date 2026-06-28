@@ -26,7 +26,7 @@ let tableYear       = null;          // null = All Years (independent of global 
 let recipientCombine = false;
 
 // Charts
-let c1 = null, c2 = null, c3 = null;
+let c1 = null, c3 = null;
 
 const PALETTE = [
     '#3b82f6','#10b981','#06b6d4','#f59e0b',
@@ -214,7 +214,7 @@ function buildYearSelect() {
     });
     sel.addEventListener('change', function() {
         selectedYear = this.value === 'all' ? null : parseInt(this.value, 10);
-        renderKPIs(); renderGraph2(); renderTable();
+        renderKPIs(); renderTable();
     });
 }
 
@@ -306,40 +306,6 @@ function renderGraph1() {
 }
 
 // â”€â”€ 10. CHART 2: Year breakdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function renderGraph2() {
-    if (c2) c2.destroy();
-    const allRows = getFiltered(); const yearRows = selectedYear === null ? allRows : allRows.filter(r => r[0] === selectedYear);
-    const byGroup = {}; let total = 0;
-    if (selDeptIdx === -1) {
-        yearRows.forEach(r => { const d = db.agencyToDeptIndex[r[1]]; byGroup[d] = (byGroup[d]||0) + r[8]; total += r[8]; });
-    } else {
-        yearRows.forEach(r => { byGroup[r[1]] = (byGroup[r[1]]||0) + r[8]; total += r[8]; });
-    }
-    const sorted = Object.entries(byGroup).map(([k,v]) => ({idx:+k, amt:v})).filter(x=>x.amt>0).sort((a,b)=>b.amt-a.amt);
-    const top = sorted.slice(0,15);
-    const labels = top.map(x => selDeptIdx===-1 ? db.departments[x.idx] : db.agencies[x.idx]);
-    const values = top.map(x => x.amt);
-    const topSum = values.reduce((s,v)=>s+v,0);
-    if (sorted.length > 15 && total - topSum > 0) {
-        labels.push(selDeptIdx===-1 ? 'Other Departments' : 'Other Agencies');
-        values.push(total - topSum);
-    }
-    document.getElementById('chart2Wrapper').style.height = Math.max(400, labels.length * 30) + 'px';
-    const yearLabel = selectedYear === null ? 'All Years' : String(selectedYear);
-    const title = selDeptIdx === -1
-        ? 'Transfer Payments by Department \u2014 ' + yearLabel
-        : 'Agency Spending: ' + db.departments[selDeptIdx] + ' \u2014 ' + yearLabel;
-    document.getElementById('chart2Title').textContent = title;
-    const colors = gradColors(top.length, '#3b82f6', '#06b6d4');
-    if (labels.length > top.length) colors.push('#6b7089');
-    c2 = new Chart(document.getElementById('chart2'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label:'Amount', data:values, backgroundColor:colors, borderRadius:4, barThickness:18 }] },
-        options: hBarOpts()
-    });
-}
-
-// â”€â”€ 11. TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initTableControls() {
     // Sort headers
     document.querySelectorAll('.premium-table th.sortable').forEach(th => {
@@ -386,7 +352,7 @@ function initTableControls() {
     if (tableYearSel) {
         // Populate with All + each year
         const allOpt = document.createElement('option');
-        allOpt.value = 'all'; allOpt.textContent = 'All';
+        allOpt.value = 'all'; allOpt.textContent = 'All Years';
         tableYearSel.appendChild(allOpt);
         getYears().slice().reverse().forEach(y => {
             const opt = document.createElement('option');
@@ -699,11 +665,9 @@ function lerp(a,b,t) { return Math.round(a+(b-a)*t); }
 function renderAll() {
     renderKPIs();
     renderGraph1();
-    renderGraph2();
     renderTable();
 }
 
 // â”€â”€ GO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 init();
-
 

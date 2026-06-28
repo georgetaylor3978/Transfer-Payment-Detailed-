@@ -507,8 +507,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .premium-table th.sortable { cursor: pointer; }
 .premium-table th.sortable:hover { color: var(--accent-blue); }
-.premium-table th.sort-asc  .sort-icon::after { content: ' â†‘'; color: var(--accent-blue); }
-.premium-table th.sort-desc .sort-icon::after { content: ' â†“'; color: var(--accent-blue); }
+.premium-table th.sort-asc  .sort-icon::after { content: " \2191"; color: var(--accent-blue); }
+.premium-table th.sort-desc .sort-icon::after { content: " \2193"; color: var(--accent-blue); }
 .premium-table th.numeric { text-align: right; }
 
 .premium-table td {
@@ -853,3 +853,28 @@ input:checked + .slider:before { transform: translateX(20px); }
     transition: border-color .2s;
 }
 .year-filter:focus { border-color: var(--accent-blue); }
+
+/* ── Chart attribution bar (watermark + data source) ── */
+.chart-attribution {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px 2px;
+    opacity: 0.55;
+    transition: opacity .2s;
+}
+.chart-attribution:hover { opacity: 0.85; }
+
+.chart-watermark {
+    height: 20px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.chart-attribution span {
+    font-size: .72rem;
+    color: var(--text-muted);
+    font-style: italic;
+    white-space: nowrap;
+}

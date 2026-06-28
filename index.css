@@ -878,3 +878,26 @@ input:checked + .slider:before { transform: translateX(20px); }
     font-style: italic;
     white-space: nowrap;
 }
+
+/* ── KPI row year control ── */
+.kpi-row-wrap { display: flex; flex-direction: column; gap: 8px; }
+
+.kpi-year-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.year-select-ctrl {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: .8rem;
+    font-family: var(--font);
+    color: var(--text-primary);
+    outline: none;
+    cursor: pointer;
+    transition: border-color .2s;
+}
+.year-select-ctrl:focus { border-color: var(--accent-blue); }

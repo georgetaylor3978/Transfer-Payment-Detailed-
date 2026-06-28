@@ -20,6 +20,7 @@ let sortCol = 'amount';
 let sortDir = 'desc';
 let colFilters = { recipient: '', program: '', agency: '', location: '' };
 let selectedRecipientSet = new Set(); // set of recipientIdx integers
+let tableYear       = null;          // null = All Years (independent of global year selector)
 
 // Recipient chart
 let recipientCombine = false;
@@ -380,6 +381,25 @@ function initTableControls() {
         });
     }
 
+    // Table year filter (independent of global year selector)
+    const tableYearSel = document.getElementById('tableYearFilter');
+    if (tableYearSel) {
+        // Populate with All + each year
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all'; allOpt.textContent = 'All';
+        tableYearSel.appendChild(allOpt);
+        getYears().slice().reverse().forEach(y => {
+            const opt = document.createElement('option');
+            opt.value = y; opt.textContent = y;
+            tableYearSel.appendChild(opt);
+        });
+        tableYearSel.addEventListener('change', function() {
+            tableYear = this.value === 'all' ? null : parseInt(this.value, 10);
+            renderTable();
+        });
+        tableYearSel.addEventListener('click', e => e.stopPropagation());
+    }
+
     // Clear all button
     const clearBtn = document.getElementById('tableClearAll');
     if (clearBtn) {
@@ -390,6 +410,10 @@ function initTableControls() {
                 const inp = document.getElementById('filter_' + col);
                 if (inp) inp.value = '';
             });
+            // Reset table year filter to All
+            tableYear = null;
+            const tySel = document.getElementById('tableYearFilter');
+            if (tySel) tySel.value = 'all';
             // Clear selections
             selectedRecipientSet.clear();
             const selAll = document.getElementById('selectAllCheck');
@@ -420,16 +444,25 @@ function renderTable() {
     if (!tbody) return;
     updateSortIcons();
 
-    const baseRows = getFiltered(); const yearRows = selectedYear === null ? baseRows : baseRows.filter(r => r[0] === selectedYear);
-    const agg = {}; let totalSum = 0;
-    yearRows.forEach(r => {
-        const key = r[7] + '|' + r[3] + '|' + r[1] + '|' + r[4];
-        if (!agg[key]) agg[key] = { recipIdx:r[7], shortIdx:r[3], progIdx:r[2], agIdx:r[1], locIdx:r[4], amount:0 };
-        agg[key].amount += r[8]; totalSum += r[8];
+    // Apply table-level year filter (independent of global year selector)
+    const baseRows = getFiltered();
+    const sourceRows = tableYear === null ? baseRows : baseRows.filter(r => r[0] === tableYear);
+
+    // Compute per-year totals so % is always relative to that year (not cross-year)
+    const yearTotals = {};
+    baseRows.forEach(r => { yearTotals[r[0]] = (yearTotals[r[0]] || 0) + r[8]; });
+
+    // Aggregate: key includes year so each year is a separate row
+    const agg = {};
+    sourceRows.forEach(r => {
+        const key = r[0] + '|' + r[7] + '|' + r[3] + '|' + r[1] + '|' + r[4];
+        if (!agg[key]) agg[key] = { year:r[0], recipIdx:r[7], shortIdx:r[3], progIdx:r[2], agIdx:r[1], locIdx:r[4], amount:0 };
+        agg[key].amount += r[8];
     });
 
     let list = Object.values(agg);
-    list.forEach(x => { x.percent = totalSum > 0 ? (x.amount/totalSum)*100 : 0; });
+    // % of total = portion of that row's year total (unchanged regardless of year filter)
+    list.forEach(x => { x.percent = (yearTotals[x.year] || 0) > 0 ? (x.amount / yearTotals[x.year]) * 100 : 0; });
 
     // Apply column filters
     if (colFilters.recipient) list = list.filter(x => db.recipients[x.recipIdx].toLowerCase().includes(colFilters.recipient));
@@ -437,10 +470,11 @@ function renderTable() {
     if (colFilters.agency)    list = list.filter(x => db.agencies[x.agIdx].toLowerCase().includes(colFilters.agency));
     if (colFilters.location)  list = list.filter(x => db.locations[x.locIdx].toLowerCase().includes(colFilters.location));
 
-    // Sort
+    // Sort (year added as a sortable column)
     list.sort((a, b) => {
         let va, vb;
         switch (sortCol) {
+            case 'year':      va = a.year;                           vb = b.year;                           break;
             case 'recipient': va = db.recipients[a.recipIdx];        vb = db.recipients[b.recipIdx];        break;
             case 'program':   va = db.programShortNames[a.shortIdx]; vb = db.programShortNames[b.shortIdx]; break;
             case 'agency':    va = db.agencies[a.agIdx];             vb = db.agencies[b.agIdx];             break;
@@ -451,11 +485,11 @@ function renderTable() {
         return sortDir === 'asc' ? va - vb : vb - va;
     });
 
-    const display = list.slice(0, 200);
+    const display = list.slice(0, 500);
     tbody.innerHTML = '';
 
     if (!display.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px">No matching records. Try clearing filters.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:32px">No matching records. Try clearing filters.</td></tr>';
         document.getElementById('tableSubtitle').textContent = 'No records match current filters';
         return;
     }
@@ -472,6 +506,7 @@ function renderTable() {
 
         tr.innerHTML =
             '<td class="check-col"><input type="checkbox" class="row-check"' + (isChecked?' checked':'') + '></td>' +
+            '<td class="numeric year-cell">' + x.year + '</td>' +
             '<td><strong>' + escHtml(db.recipients[x.recipIdx]) + '</strong></td>' +
             '<td><span class="program-badge" title="' + tip + '">' + escHtml(label) + '</span></td>' +
             '<td>' + escHtml(db.agencies[x.agIdx]) + '</td>' +
@@ -670,3 +705,5 @@ function renderAll() {
 
 // â”€â”€ GO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 init();
+
+

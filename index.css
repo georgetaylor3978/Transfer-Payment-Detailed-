@@ -829,3 +829,27 @@ input:checked + .slider:before { transform: translateX(20px); }
     font-size: .9rem;
     font-style: italic;
 }
+
+/* ── Year column & filter ── */
+.year-cell {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    width: 56px;
+}
+
+.year-filter {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: .78rem;
+    color: var(--text-primary);
+    font-family: var(--font);
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color .2s;
+}
+.year-filter:focus { border-color: var(--accent-blue); }

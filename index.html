@@ -182,6 +182,7 @@
                 <thead>
                     <tr>
                         <th class="check-col"><input type="checkbox" id="selectAllCheck" title="Select / deselect all visible"></th>
+                        <th class="sortable" data-sort="year">Year <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="recipient">Recipient <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="program">Program <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="agency">Agency <span class="sort-icon"></span></th>
@@ -191,6 +192,7 @@
                     </tr>
                     <tr class="filter-row">
                         <td></td>
+                        <td><select id="tableYearFilter" class="col-filter year-filter"><option value="all">All Years</option></select></td>
                         <td><input type="text" id="filter_recipient" placeholder="Filter&#8230;" class="col-filter"></td>
                         <td><input type="text" id="filter_program"   placeholder="Filter&#8230;" class="col-filter"></td>
                         <td><input type="text" id="filter_agency"    placeholder="Filter&#8230;" class="col-filter"></td>
